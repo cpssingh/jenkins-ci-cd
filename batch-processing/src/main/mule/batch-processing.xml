@@ -19,6 +19,7 @@ http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/ba
 	<flow name="batch-processingFlow" doc:id="e44d179e-a040-43f4-b83f-259f0ca8791d" >
 		<http:listener doc:name="Listener" doc:id="d4bbac6b-6401-4df3-af4c-aa8218271f6f" config-ref="HTTP_Listener_config" path="/batchjob"/>
 		<file:read doc:name="Read" doc:id="9a19a9ff-8377-4e15-b103-bbf83dd79248" config-ref="File_Config" path="G:\MY_DOCS\input\sales.csv"/>
+		<logger level="INFO" doc:name="Logger" doc:id="473d0ad3-13da-4d73-b703-e03820f6ca95" message="First Logger"/>
 		<ee:transform doc:name="Transform Message" doc:id="91e5ebb5-b013-4428-a98c-1e6df09afabd" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
