@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="CSV" format="csv">
+      <types:shape format="weave"><![CDATA[%dw 2.0
+
+type CSV = Array<{|  Transaction_date: String,   Product: String,   Price: String,   Payment_Type: String,   Name: String,   City: String,   State: String,   Country: String,   Account_Created: String,   Last_Login: String,   Latitude: String,   Longitude: String|}>
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+    <types:type name="json" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#d4bbac6b-6401-4df3-af4c-aa8218271f6f">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="CSV"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#91e5ebb5-b013-4428-a98c-1e6df09afabd">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="CSV"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="CSV"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

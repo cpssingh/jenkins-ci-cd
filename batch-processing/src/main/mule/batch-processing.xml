@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8919487b-ad72-4fe1-b348-83dc2687a32f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="d594111b-4adf-457a-a253-29dd03b87d20" >
+		<file:connection workingDir="G:\MY_DOCS\input" />
+	</file:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="7ec22ece-b54f-4835-b732-c67c97e0890f" >
+		<file:connection workingDir="G:\MY_DOCS\input\success" />
+	</file:config>
+	<flow name="batch-processingFlow" doc:id="e44d179e-a040-43f4-b83f-259f0ca8791d" >
+		<http:listener doc:name="Listener" doc:id="d4bbac6b-6401-4df3-af4c-aa8218271f6f" config-ref="HTTP_Listener_config" path="/batchjob"/>
+		<file:read doc:name="Read" doc:id="9a19a9ff-8377-4e15-b103-bbf83dd79248" config-ref="File_Config" path="G:\MY_DOCS\input\sales.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="91e5ebb5-b013-4428-a98c-1e6df09afabd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	Transaction_date: payload01.Transaction_date,
+	Product: payload01.Product,
+	Price: payload01.Price,
+	Payment_Type: payload01.Payment_Type,
+	Name: payload01.Name,
+	City: payload01.City,
+	State: payload01.State,
+	Country: payload01.Country,
+	Account_Created: payload01.Account_Created,
+	Last_Login: payload01.Last_Login,
+	Latitude: payload01.Latitude,
+	Longitude: payload01.Longitude
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batch-processingBatch_Job" doc:id="32beaf80-5e0e-4139-9454-270577765a00" schedulingStrategy="ROUND_ROBIN">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="056ba7cc-a732-4f73-986d-3f3ffa213951" >
+					<logger level="INFO" doc:name="Logger" doc:id="bcc4ec18-1835-4f90-b192-215025737395" message="logger"/>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="688d061f-9665-4241-b9ae-570c846902a5" size="100">
+						<ee:transform doc:name="Transform Message" doc:id="1e49546c-0337-4864-9dae-b8326fbe5e93">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Records: payload map(data,index)->{
+		TD:data.Transaction_date,
+		Product:data.Product,
+		Price:data.Price,
+		Name:data.Name
+		
+	}
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<file:write doc:name="Write" doc:id="8bf71e86-f902-4efa-9c74-6648a806b3ab" config-ref="File_Config1" path="#['MyFile' ++ ( now() as String {format:'yyyy-MM-dd-hh-mm-ss'}  ) ++ (random() * 1000) ++ '.txt']"/>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="3d38bbcf-856f-4ff8-82c2-e9db02a27a00" message="This is completed"/>
+			</batch:on-complete>
+		</batch:job>
+		<set-payload value="Batch job is completed" doc:name="Set Payload" doc:id="b55bcba2-8ad4-4593-8f8c-d110e63dd261" />
+	</flow>
+</mule>
